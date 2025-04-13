@@ -30,6 +30,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
     implementation("org.springframework.grpc:spring-grpc-spring-boot-starter")
+    implementation("io.projectreactor.tools:blockhound:1.0.11.RELEASE")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
@@ -73,4 +74,9 @@ protobuf {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_21)) {
+        jvmArgs(
+            "-XX:+AllowRedefinitionToAddDeleteMethods",
+        )
+    }
 }

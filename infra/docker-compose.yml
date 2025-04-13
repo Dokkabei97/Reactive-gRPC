@@ -1,6 +1,129 @@
 services:
-  mongodb:
+  # Config Server Replica Set
+  config-server-1:
     image: mongo:latest
-    container_name: mongodb
+    container_name: config-server-1
+    command: mongod --configsvr --replSet configReplSet --port 27017 --dbpath /data/db
+    volumes:
+      - config-server-1:/data/db
+    networks:
+      - mongo-cluster
+
+  config-server-2:
+    image: mongo:latest
+    container_name: config-server-2
+    command: mongod --configsvr --replSet configReplSet --port 27017 --dbpath /data/db
+    volumes:
+      - config-server-2:/data/db
+    networks:
+      - mongo-cluster
+
+  config-server-3:
+    image: mongo:latest
+    container_name: config-server-3
+    command: mongod --configsvr --replSet configReplSet --port 27017 --dbpath /data/db
+    volumes:
+      - config-server-3:/data/db
+    networks:
+      - mongo-cluster
+
+  # Shard 1 Replica Set
+  shard1-server-1:
+    image: mongo:latest
+    container_name: shard1-server-1
+    command: mongod --shardsvr --replSet shard1ReplSet --port 27017 --dbpath /data/db
+    volumes:
+      - shard1-server-1:/data/db
+    networks:
+      - mongo-cluster
+
+  shard1-server-2:
+    image: mongo:latest
+    container_name: shard1-server-2
+    command: mongod --shardsvr --replSet shard1ReplSet --port 27017 --dbpath /data/db
+    volumes:
+      - shard1-server-2:/data/db
+    networks:
+      - mongo-cluster
+
+  shard1-server-3:
+    image: mongo:latest
+    container_name: shard1-server-3
+    command: mongod --shardsvr --replSet shard1ReplSet --port 27017 --dbpath /data/db
+    volumes:
+      - shard1-server-3:/data/db
+    networks:
+      - mongo-cluster
+
+  # Shard 2 Replica Set
+  shard2-server-1:
+    image: mongo:latest
+    container_name: shard2-server-1
+    command: mongod --shardsvr --replSet shard2ReplSet --port 27017 --dbpath /data/db
+    volumes:
+      - shard2-server-1:/data/db
+    networks:
+      - mongo-cluster
+
+  shard2-server-2:
+    image: mongo:latest
+    container_name: shard2-server-2
+    command: mongod --shardsvr --replSet shard2ReplSet --port 27017 --dbpath /data/db
+    volumes:
+      - shard2-server-2:/data/db
+    networks:
+      - mongo-cluster
+
+  shard2-server-3:
+    image: mongo:latest
+    container_name: shard2-server-3
+    command: mongod --shardsvr --replSet shard2ReplSet --port 27017 --dbpath /data/db
+    volumes:
+      - shard2-server-3:/data/db
+    networks:
+      - mongo-cluster
+
+  # Router (mongos)
+  mongos-router:
+    image: mongo:latest
+    container_name: mongos-router
+    depends_on:
+      - config-server-1
+      - config-server-2
+      - config-server-3
+    command: mongos --configdb configReplSet/config-server-1:27017,config-server-2:27017,config-server-3:27017 --port 27017
     ports:
       - "27017:27017"
+    networks:
+      - mongo-cluster
+
+  # 초기화 스크립트 컨테이너
+  mongo-setup:
+    image: mongo:latest
+    container_name: mongo-setup
+    depends_on:
+      - mongos-router
+      - config-server-1
+      - shard1-server-1
+      - shard2-server-1
+    volumes:
+      - ./scripts:/scripts
+    entrypoint: [ "bash", "/scripts/setup.sh" ]
+    restart: "no"
+    networks:
+      - mongo-cluster
+
+networks:
+  mongo-cluster:
+    driver: bridge
+
+volumes:
+  config-server-1:
+  config-server-2:
+  config-server-3:
+  shard1-server-1:
+  shard1-server-2:
+  shard1-server-3:
+  shard2-server-1:
+  shard2-server-2:
+  shard2-server-3:

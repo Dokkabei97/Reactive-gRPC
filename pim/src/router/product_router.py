@@ -1,23 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
-from typing import Optional
-from datetime import datetime
+from fastapi import APIRouter, Depends
 
 from src.infra.grpc_client import ProductGrpcClient
-from src.domain.product import Product
+from src.utils.dummy_product_maker import *
 
 router = APIRouter(
     prefix="/products",
 )
-
-
-# Pydantic 모델 정의
-class ProductRequest(BaseModel):
-    id: Optional[str] = None
-    name: str
-    price: int
-    stock: int
-    category: str
 
 
 # gRPC 클라이언트 의존성
@@ -30,51 +18,42 @@ async def get_grpc_client():
         await client.close()
 
 
-@router.post("")
-async def create_product(product_req: ProductRequest, grpc_client: ProductGrpcClient = Depends(get_grpc_client)):
-    now = datetime.now().isoformat()
-    product = Product(
-        id=product_req.id or str(hash(now)),
-        name=product_req.name,
-        price=product_req.price,
-        stock=product_req.stock,
-        category=product_req.category,
-        created_at=now,
-        updated_at=now
-    )
+@router.post
+async def create_product(
+        client: ProductGrpcClient = Depends(get_grpc_client),
+):
+    await client.create_product(make_dummy_product())
 
-    try:
-        response = await grpc_client.create_product(product)
-        return {"message": "Product created", "success": response.success, "details": response.message}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create product: {str(e)}")
+@router.post("/bulk")
+async def create_product_bulk(
+        count: int = 1000,
+        client: ProductGrpcClient = Depends(get_grpc_client),
+):
+    await client.create_product_bulk(make_dummy_product_list(count))
 
 
-@router.put("/{product_id}")
-async def update_product(product_id: str, product_req: ProductRequest,
-                         grpc_client: ProductGrpcClient = Depends(get_grpc_client)):
-    now = datetime.now().isoformat()
-    product = Product(
-        id=product_id,
-        name=product_req.name,
-        price=product_req.price,
-        stock=product_req.stock,
-        category=product_req.category,
-        created_at="",  # 서버에서 처리
-        updated_at=now
-    )
+@router.put
+async def update_product(
+        client: ProductGrpcClient = Depends(get_grpc_client),
+):
+    await client.update_product(update_dummy_product())
 
-    try:
-        response = await grpc_client.update_product(product)
-        return {"message": "Product updated", "success": response.success, "details": response.message}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to update product: {str(e)}")
+@router.put("/bulk")
+async def update_product_bulk(
+        count: int = 1000,
+        client: ProductGrpcClient = Depends(get_grpc_client),
+):
+    await client.update_product_bulk(update_dummy_product_list(count))
 
+@router.delete
+async def delete_product(
+        client: ProductGrpcClient = Depends(get_grpc_client),
+):
+    await client.delete_product(delete_dummy_product())
 
-@router.delete("/{product_id}")
-async def delete_product(product_id: str, grpc_client: ProductGrpcClient = Depends(get_grpc_client)):
-    try:
-        response = await grpc_client.delete_product(product_id)
-        return {"message": "Product deleted", "success": response.success, "details": response.message}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to delete product: {str(e)}")
+@router.delete("/bulk")
+async def delete_product_bulk(
+        count: int = 1000,
+        client: ProductGrpcClient = Depends(get_grpc_client),
+):
+    await client.delete_product_bulk(delete_dummy_product_list(count))

@@ -1,0 +1,14 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/pmp
+      database: pmp
+      auto-index-creation: true
+
+  application:
+    name: product-management-platform
+
+logging:
+  level:
+    org.springframework.data.mongodb: DEBUG
+    com.hl.pmp: DEBUG
