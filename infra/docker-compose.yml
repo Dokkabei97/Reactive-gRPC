@@ -1,129 +1,98 @@
-services:
-  # Config Server Replica Set
-  config-server-1:
-    image: mongo:latest
-    container_name: config-server-1
-    command: mongod --configsvr --replSet configReplSet --port 27017 --dbpath /data/db
-    volumes:
-      - config-server-1:/data/db
-    networks:
-      - mongo-cluster
+# docker-compose.yml
 
-  config-server-2:
-    image: mongo:latest
-    container_name: config-server-2
-    command: mongod --configsvr --replSet configReplSet --port 27017 --dbpath /data/db
-    volumes:
-      - config-server-2:/data/db
-    networks:
-      - mongo-cluster
+version: '3.8'
 
-  config-server-3:
-    image: mongo:latest
-    container_name: config-server-3
-    command: mongod --configsvr --replSet configReplSet --port 27017 --dbpath /data/db
-    volumes:
-      - config-server-3:/data/db
-    networks:
-      - mongo-cluster
+volumes:
+  # Config Server Data Volumes
+  configsvr01_data: {}
+  configsvr02_data: {}
+  configsvr03_data: {}
 
-  # Shard 1 Replica Set
-  shard1-server-1:
-    image: mongo:latest
-    container_name: shard1-server-1
-    command: mongod --shardsvr --replSet shard1ReplSet --port 27017 --dbpath /data/db
-    volumes:
-      - shard1-server-1:/data/db
-    networks:
-      - mongo-cluster
+  # Shard 1 Data Volumes
+  shard01a_data: {}
+  # shard01b_data: {} # 주석 해제하여 샤드1 레플리카 멤버 추가 가능
+  # shard01c_data: {} # 주석 해제하여 샤드1 레플리카 멤버 추가 가능
 
-  shard1-server-2:
-    image: mongo:latest
-    container_name: shard1-server-2
-    command: mongod --shardsvr --replSet shard1ReplSet --port 27017 --dbpath /data/db
-    volumes:
-      - shard1-server-2:/data/db
-    networks:
-      - mongo-cluster
-
-  shard1-server-3:
-    image: mongo:latest
-    container_name: shard1-server-3
-    command: mongod --shardsvr --replSet shard1ReplSet --port 27017 --dbpath /data/db
-    volumes:
-      - shard1-server-3:/data/db
-    networks:
-      - mongo-cluster
-
-  # Shard 2 Replica Set
-  shard2-server-1:
-    image: mongo:latest
-    container_name: shard2-server-1
-    command: mongod --shardsvr --replSet shard2ReplSet --port 27017 --dbpath /data/db
-    volumes:
-      - shard2-server-1:/data/db
-    networks:
-      - mongo-cluster
-
-  shard2-server-2:
-    image: mongo:latest
-    container_name: shard2-server-2
-    command: mongod --shardsvr --replSet shard2ReplSet --port 27017 --dbpath /data/db
-    volumes:
-      - shard2-server-2:/data/db
-    networks:
-      - mongo-cluster
-
-  shard2-server-3:
-    image: mongo:latest
-    container_name: shard2-server-3
-    command: mongod --shardsvr --replSet shard2ReplSet --port 27017 --dbpath /data/db
-    volumes:
-      - shard2-server-3:/data/db
-    networks:
-      - mongo-cluster
-
-  # Router (mongos)
-  mongos-router:
-    image: mongo:latest
-    container_name: mongos-router
-    depends_on:
-      - config-server-1
-      - config-server-2
-      - config-server-3
-    command: mongos --configdb configReplSet/config-server-1:27017,config-server-2:27017,config-server-3:27017 --port 27017
-    ports:
-      - "27017:27017"
-    networks:
-      - mongo-cluster
-
-  # 초기화 스크립트 컨테이너
-  mongo-setup:
-    image: mongo:latest
-    container_name: mongo-setup
-    depends_on:
-      - mongos-router
-      - config-server-1
-      - shard1-server-1
-      - shard2-server-1
-    volumes:
-      - ./scripts:/scripts
-    entrypoint: [ "bash", "/scripts/setup.sh" ]
-    restart: "no"
-    networks:
-      - mongo-cluster
+  # Shard 2 Data Volumes
+  shard02a_data: {}
+  # shard02b_data: {} # 주석 해제하여 샤드2 레플리카 멤버 추가 가능
+  # shard02c_data: {} # 주석 해제하여 샤드2 레플리카 멤버 추가 가능
 
 networks:
   mongo-cluster:
     driver: bridge
 
-volumes:
-  config-server-1:
-  config-server-2:
-  config-server-3:
-  shard1-server-1:
-  shard1-server-2:
-  shard1-server-3:
-  shard2-server-1:
-  shard2-server-2:
-  shard2-server-3:
+services:
+  # --- Configuration Servers (Replica Set: csrs) ---
+  configsvr01:
+    image: mongo:latest
+    container_name: configsvr01
+    command: mongod --configsvr --replSet csrs --port 27017 --bind_ip_all
+    volumes:
+      - configsvr01_data:/data/configdb
+    networks:
+      - mongo-cluster
+    restart: always
+
+  configsvr02:
+    image: mongo:latest
+    container_name: configsvr02
+    command: mongod --configsvr --replSet csrs --port 27017 --bind_ip_all
+    volumes:
+      - configsvr02_data:/data/configdb
+    networks:
+      - mongo-cluster
+    restart: always
+
+  configsvr03:
+    image: mongo:latest
+    container_name: configsvr03
+    command: mongod --configsvr --replSet csrs --port 27017 --bind_ip_all
+    volumes:
+      - configsvr03_data:/data/configdb
+    networks:
+      - mongo-cluster
+    restart: always
+
+  # --- Shard 1 Servers (Replica Set: shard01rs) ---
+  shard01a:
+    image: mongo:latest
+    container_name: shard01a
+    command: mongod --shardsvr --replSet shard01rs --port 27017 --bind_ip_all
+    volumes:
+      - shard01a_data:/data/db
+    networks:
+      - mongo-cluster
+    restart: always
+
+  # --- Shard 2 Servers (Replica Set: shard02rs) ---
+  shard02a:
+    image: mongo:latest
+    container_name: shard02a
+    command: mongod --shardsvr --replSet shard02rs --port 27017 --bind_ip_all
+    volumes:
+      - shard02a_data:/data/db
+    networks:
+      - mongo-cluster
+    restart: always
+
+  # --- Mongos Router ---
+  mongos01:
+    image: mongo:latest
+    container_name: mongos01
+    command: >
+      mongos --configdb csrs/configsvr01:27017,configsvr02:27017,configsvr03:27017
+      --port 27017
+      --bind_ip_all
+    ports:
+      - "27017:27017" # 외부 접속을 위해 호스트 포트와 연결
+    networks:
+      - mongo-cluster
+    depends_on:
+      - configsvr01
+      - configsvr02
+      - configsvr03
+      - shard01a
+      - shard02a
+    restart: always
+    # healthcheck 추가하여 mongos가 config server 준비될 때까지 기다리도록 설정 가능 (복잡도 증가)
