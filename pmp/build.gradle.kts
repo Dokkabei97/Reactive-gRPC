@@ -32,12 +32,18 @@ dependencies {
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+
+    // //////////////////////////////////////////////////////////////////////////////////////////////
+    // gRPC protobuf에서 suspend를 사용하기 위해서는 grpc-kotlin을 사용해야 한다.
     implementation("org.springframework.grpc:spring-grpc-spring-boot-starter") {
         exclude(group = "io.grpc", module = "grpc-stub")
         exclude(group = "com.google.protobuf", module = "protobuf-java")
     }
+
     implementation("com.google.protobuf:protobuf-kotlin:4.30.2")
     runtimeOnly("io.grpc:grpc-kotlin-stub:1.4.3")
+    // //////////////////////////////////////////////////////////////////////////////////////////////
+
     implementation("io.projectreactor.tools:blockhound:1.0.11.RELEASE")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")
