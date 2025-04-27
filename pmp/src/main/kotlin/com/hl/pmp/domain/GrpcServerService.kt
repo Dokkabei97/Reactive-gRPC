@@ -1,52 +1,25 @@
 package com.hl.pmp.domain
 
-import io.grpc.stub.StreamObserver
-import org.springframework.grpc.product.proto.*
-import org.springframework.grpc.server.service.GrpcService
+import org.springframework.grpc.product.proto.CreateProductRequest
+import org.springframework.grpc.product.proto.ProductResponse
+import org.springframework.grpc.product.proto.ProductServiceGrpcKt
+import org.springframework.stereotype.Service
 
-@GrpcService
+@Service
 class GrpcServerService(
     val productService: ProductService,
-) : ProductServiceGrpc.ProductServiceImplBase() {
-    override fun createProduct(
-        request: CreateProductRequest?,
-        responseObserver: StreamObserver<ProductResponse>?,
-    ) {
-        super.createProduct(request, responseObserver)
-    }
+) : ProductServiceGrpcKt.ProductServiceCoroutineImplBase() {
+    override suspend fun createProduct(request: CreateProductRequest): ProductResponse {
+        val product =
+            Product(
+                request.product.name,
+                request.product.price,
+            )
+        productService.create(product)
 
-    override fun createProductsBulk(
-        request: CreateProductBulkRequest?,
-        responseObserver: StreamObserver<ProductResponse>?,
-    ) {
-        super.createProductsBulk(request, responseObserver)
-    }
-
-    override fun updateProduct(
-        request: UpdateProductRequest?,
-        responseObserver: StreamObserver<ProductResponse>?,
-    ) {
-        super.updateProduct(request, responseObserver)
-    }
-
-    override fun updateProductsBulk(
-        request: UpdateProductBulkRequest?,
-        responseObserver: StreamObserver<ProductResponse>?,
-    ) {
-        super.updateProductsBulk(request, responseObserver)
-    }
-
-    override fun deleteProduct(
-        request: DeleteProductRequest?,
-        responseObserver: StreamObserver<ProductResponse>?,
-    ) {
-        super.deleteProduct(request, responseObserver)
-    }
-
-    override fun deleteProductsBulk(
-        request: DeleteProductBulkRequest?,
-        responseObserver: StreamObserver<ProductResponse>?,
-    ) {
-        super.deleteProductsBulk(request, responseObserver)
+        return ProductResponse
+            .newBuilder()
+            .setMessage("Product created")
+            .build()
     }
 }

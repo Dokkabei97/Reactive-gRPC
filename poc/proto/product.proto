@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+// java, kotlin options
+option java_multiple_files = true;
+option java_package = "org.springframework.grpc.product.proto";
+option java_outer_classname = "ProductProto";
+
+// go options
+package product;
+option go_package = './proto';
+
+service ProductService {
+  // PIM -> PMP
+  rpc CreateProduct(CreateProductRequest) returns (ProductResponse);
+  rpc CreateProductsBulk(CreateProductBulkRequest) returns (ProductResponse);
+
+  rpc UpdateProduct(UpdateProductRequest) returns (ProductResponse);
+  rpc UpdateProductsBulk(UpdateProductBulkRequest) returns (ProductResponse);
+
+  rpc DeleteProduct(DeleteProductRequest) returns (ProductResponse);
+  rpc DeleteProductsBulk(DeleteProductBulkRequest) returns (ProductResponse);
+
+  // PMP -> POC 로 처리된 상품 정보 전송
+  rpc SendProcessedProduct(ProcessedProductRequest) returns (ProcessedProductResponse);
+
+  // POC -> PIM 전달 받은 상품 정보 재전송
+  rpc ResendProcessedProduct(ProcessedProductRequest) returns (ProcessedProductResponse);
+}
+
+message Product {
+  string id = 1;              // 상품 ID
+  string name = 2;            // 상품명
+  int32 price = 3;           // 가격
+  string created_at = 6;      // 생성 일시
+  string updated_at = 7;      // 수정 일시
+}
+
+message CreateProductRequest {
+  Product product = 1;        // 생성할 상품 정보
+}
+
+message CreateProductBulkRequest {
+  repeated Product products = 1; // 생성할 상품 목록
+}
+
+message UpdateProductRequest {
+  Product product = 1;        // 업데이트할 상품 정보
+}
+
+message UpdateProductBulkRequest {
+  repeated Product products = 1; // 업데이트할 상품 목록
+}
+
+message DeleteProductRequest {
+  string id = 1;              // 삭제할 상품 ID
+}
+
+message DeleteProductBulkRequest {
+  repeated string ids = 1;     // 삭제할 상품 ID 목록
+}
+
+message ProductResponse {
+  string message = 1;         // 상태 메시지
+}
+
+message ProcessedProductRequest {
+  Product product = 1;        // 처리된 상품 정보
+  string operation = 2;       // 수행된 작업 (생성/수정/삭제)
+}
+
+message ProcessedProductResponse {
+  bool success = 1;           // 처리 성공 여부
+  string message = 2;         // 상태 메시지
+}

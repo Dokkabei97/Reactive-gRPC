@@ -19,17 +19,25 @@ java {
 
 repositories {
     mavenCentral()
+    maven { url = uri("https://repo.spring.io/milestone") }
+    maven { url = uri("https://repo.spring.io/snapshop") }
 }
 
-extra["springGrpcVersion"] = "0.5.0"
+extra["springGrpcVersion"] = "0.8.0"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
     implementation("io.grpc:grpc-services")
+//    implementation("com.salesforce.servicelibs:reactor-grpc-stub:1.2.4")
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-    implementation("org.springframework.grpc:spring-grpc-spring-boot-starter")
+    implementation("org.springframework.grpc:spring-grpc-spring-boot-starter") {
+        exclude(group = "io.grpc", module = "grpc-stub")
+        exclude(group = "com.google.protobuf", module = "protobuf-java")
+    }
+    implementation("com.google.protobuf:protobuf-kotlin:4.30.2")
+    runtimeOnly("io.grpc:grpc-kotlin-stub:1.4.3")
     implementation("io.projectreactor.tools:blockhound:1.0.11.RELEASE")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")
@@ -59,6 +67,12 @@ protobuf {
         id("grpc") {
             artifact = "io.grpc:protoc-gen-grpc-java"
         }
+        id("grpckt") {
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:1.4.3:jdk8@jar"
+        }
+//        id("reactor") {
+//            artifact = "com.salesforce.servicelibs:reactor-grpc:1.2.4"
+//        }
     }
     generateProtoTasks {
         all().forEach {
@@ -67,6 +81,11 @@ protobuf {
                     option("jakarta_omit")
                     option("@generated=omit")
                 }
+                id("grpckt") {}
+//                id("reactor") {}
+            }
+            it.builtins {
+                id("kotlin") {}
             }
         }
     }
