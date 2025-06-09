@@ -20,7 +20,7 @@ java {
 repositories {
     mavenCentral()
     maven { url = uri("https://repo.spring.io/milestone") }
-    maven { url = uri("https://repo.spring.io/snapshop") }
+    maven { url = uri("https://repo.spring.io/snapshot") }
 }
 
 extra["springGrpcVersion"] = "0.8.0"
@@ -41,7 +41,7 @@ dependencies {
     }
 
     implementation("com.google.protobuf:protobuf-kotlin:4.30.2")
-    runtimeOnly("io.grpc:grpc-kotlin-stub:1.4.3")
+    implementation("io.grpc:grpc-kotlin-stub:1.4.3")
     // //////////////////////////////////////////////////////////////////////////////////////////////
 
     implementation("io.projectreactor.tools:blockhound:1.0.11.RELEASE")

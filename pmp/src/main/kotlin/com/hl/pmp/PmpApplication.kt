@@ -13,11 +13,12 @@ class PmpApplication {
     fun grpcExceptionHandler(): GrpcExceptionHandler =
         GrpcExceptionHandler { ex ->
             if (ex is IllegalArgumentException) {
-                Status.INVALID_ARGUMENT.withDescription(ex.message)
+                Status.INVALID_ARGUMENT.withDescription(ex.message).asException()
             } else {
                 Status.INTERNAL
                     .withCause(ex)
                     .withDescription(ex.message)
+                    .asException()
             }
         }
 }
